@@ -44,6 +44,10 @@ model Agent {
   style              String? // supportive, concise, detailed, professional, friendly
   maxTurnsPerSession Int?
 
+  // v2: First Message & Dynamic Variables
+  firstMessage      String? // What agent says when conversation starts
+  dynamicVariables  String? // JSON array: ["user_name", "order_id", etc.]
+
   // Voice & Audio
   voiceProfileId String?
   ttsProvider    String  @default("mock") // elevenlabs, google, deepgram, openai, mock
@@ -53,6 +57,11 @@ model Agent {
 
   // Voice settings (JSON)
   voiceSettings String? // JSON: { stability, similarityBoost, speed, pitch, energy }
+
+  // v2: Language & Pronunciation
+  language                String  @default("en-US") // Primary language
+  supportedLanguages      String? // JSON array: ["en-US", "es-ES", "fr-FR"]
+  pronunciationDictionary String? // JSON: { "API": "A P I", "SQLite": "S Q L ite" }
 
   // LLM Configuration
   llmProvider String @default("openai") // openai, anthropic, google, mock
@@ -65,6 +74,9 @@ model Agent {
   turnEagerness          String  @default("medium") // low, medium, high
   maxResponseLengthSec   Int?
   latencyTargetMs        Int?
+
+  // v2: Turn Timeout (specific to prompting user after silence)
+  turnTimeoutSeconds     Int     @default(10) // 1-30 seconds before prompting user
 
   // Knowledge & RAG
   ragEnabled  Boolean @default(false)
@@ -184,6 +196,9 @@ model Session {
   startedAt   DateTime @default(now())
   endedAt     DateTime?
   metadata    String? // JSON
+
+  // v2: Runtime Overrides (JSON)
+  overrides   String? // JSON: { systemPrompt, firstMessage, language, voiceId, etc. }
 
   agent Agent  @relation(fields: [agentId], references: [id])
   turns Turn[]

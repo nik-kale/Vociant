@@ -20,18 +20,23 @@ import {
   Turn,
   TranscriptResult,
   Tool,
+  ConversationOverrides,
 } from '../types';
 import { ProviderFactory } from '../providers';
 import { ITTSProvider } from '../providers/tts.interface';
 import { ISTTProvider } from '../providers/stt.interface';
 import { ILLMProvider } from '../providers/llm.interface';
 import { ToolExecutor, ToolExecutionContext } from '../tools';
+import { replaceVariables, applyPronunciation } from '../utils';
 
 export interface SessionEngineConfig {
   agent: AgentConfig;
   sessionId: string;
   tools?: Tool[];
   onEvent?: (event: SessionEvent) => void;
+
+  // v2: Conversation overrides
+  overrides?: ConversationOverrides;
 }
 
 export class SessionEngine extends EventEmitter {
@@ -40,12 +45,17 @@ export class SessionEngine extends EventEmitter {
   private state: SessionState;
   private toolExecutor: ToolExecutor;
 
+  // v2: Overrides
+  private overrides?: ConversationOverrides;
+  private hasSpokenFirstMessage = false;
+
   private ttsProvider: ITTSProvider;
   private sttProvider: ISTTProvider;
   private llmProvider: ILLMProvider;
 
   private currentTurn?: Turn;
   private silenceTimer?: NodeJS.Timeout;
+  private turnTimeoutTimer?: NodeJS.Timeout; // v2: Turn timeout
   private isAgentSpeaking = false;
 
   constructor(config: SessionEngineConfig) {
@@ -53,13 +63,14 @@ export class SessionEngine extends EventEmitter {
 
     this.agent = config.agent;
     this.sessionId = config.sessionId;
+    this.overrides = config.overrides;
 
     this.state = {
       sessionId: config.sessionId,
       messages: [
         {
           role: 'system',
-          content: this.agent.systemPrompt,
+          content: '', // Will be set by getEffectiveSystemPrompt()
         },
       ],
       variables: {},
@@ -106,6 +117,52 @@ export class SessionEngine extends EventEmitter {
         status: 'active',
       },
     });
+
+    // v2: Speak first message if configured
+    await this.speakFirstMessage();
+  }
+
+  /**
+   * v2: Speak the first message when conversation starts
+   */
+  private async speakFirstMessage(): Promise<void> {
+    if (this.hasSpokenFirstMessage) return;
+
+    const firstMessage = this.overrides?.firstMessage || this.agent.firstMessage;
+    if (!firstMessage) return;
+
+    this.hasSpokenFirstMessage = true;
+
+    // Replace dynamic variables
+    let message = firstMessage;
+    if (this.overrides?.dynamicVariableValues) {
+      message = replaceVariables(message, this.overrides.dynamicVariableValues);
+    }
+
+    // Apply pronunciation dictionary
+    if (this.agent.pronunciationDictionary) {
+      message = applyPronunciation(message, this.agent.pronunciationDictionary);
+    }
+
+    const turnId = `turn-first-${Date.now()}`;
+    await this.speakResponse(message, turnId);
+
+    // Start turn timeout timer
+    this.resetTurnTimeoutTimer();
+  }
+
+  /**
+   * v2: Get effective configuration (agent + overrides)
+   */
+  private getEffectiveSystemPrompt(): string {
+    let prompt = this.overrides?.systemPrompt || this.agent.systemPrompt;
+
+    // Replace dynamic variables in system prompt
+    if (this.overrides?.dynamicVariableValues) {
+      prompt = replaceVariables(prompt, this.overrides.dynamicVariableValues);
+    }
+
+    return prompt;
   }
 
   /**
@@ -343,6 +400,38 @@ export class SessionEngine extends EventEmitter {
     // Could emit an event or trigger a prompt like "Are you still there?"
     // For now, just clear the timer
     this.silenceTimer = undefined;
+  }
+
+  /**
+   * v2: Reset turn timeout timer
+   *
+   * Starts timer to prompt user if they don't speak
+   */
+  private resetTurnTimeoutTimer(): void {
+    if (this.turnTimeoutTimer) {
+      clearTimeout(this.turnTimeoutTimer);
+    }
+
+    const timeoutSeconds = this.agent.conversationFlow.turnTimeoutSeconds || 10;
+    const timeoutMs = timeoutSeconds * 1000;
+
+    this.turnTimeoutTimer = setTimeout(() => {
+      this.handleTurnTimeout();
+    }, timeoutMs);
+  }
+
+  /**
+   * v2: Handle turn timeout (prompt user)
+   */
+  private async handleTurnTimeout(): Promise<void> {
+    // Speak a prompt like "Are you still there?" or "How can I help you?"
+    const promptMessage = "Are you still there? How can I help you?";
+    const turnId = `turn-prompt-${Date.now()}`;
+
+    await this.speakResponse(promptMessage, turnId);
+
+    // Reset timer to prompt again if needed
+    this.resetTurnTimeoutTimer();
   }
 
   /**

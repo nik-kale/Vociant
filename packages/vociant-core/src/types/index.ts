@@ -172,9 +172,18 @@ export interface AgentConfig {
   style?: 'supportive' | 'concise' | 'detailed' | 'professional' | 'friendly';
   maxTurnsPerSession?: number;
 
+  // v2: First Message & Dynamic Variables
+  firstMessage?: string;
+  dynamicVariables?: string[]; // List of required variables: ["user_name", "order_id"]
+
   // Voice & Audio
   voiceProfile: VoiceProfile;
   audioConfig?: AudioConfig;
+
+  // v2: Language & Pronunciation
+  language: string; // Primary language, e.g., "en-US"
+  supportedLanguages?: string[]; // Multi-language support
+  pronunciationDictionary?: Record<string, string>; // { "API": "A P I" }
 
   // Conversation Flow
   conversationFlow: ConversationFlowConfig;
@@ -206,12 +215,26 @@ export interface ConversationFlowConfig {
   turnEagerness: 'low' | 'medium' | 'high'; // How quickly agent responds
   maxResponseLengthSeconds?: number;
   latencyTargetMs?: number;
+
+  // v2: Turn Timeout
+  turnTimeoutSeconds?: number; // 1-30s - How long to wait before prompting user
 }
 
 export interface ChannelConfig {
   type: 'web' | 'telephony' | 'sip';
   enabled: boolean;
   config?: Record<string, any>;
+}
+
+// v2: Conversation Overrides
+export interface ConversationOverrides {
+  systemPrompt?: string;
+  firstMessage?: string;
+  language?: string;
+  voiceId?: string;
+  llmModel?: string;
+  temperature?: number;
+  dynamicVariableValues?: Record<string, any>; // { "user_name": "John", "order_id": "12345" }
 }
 
 export interface RAGConfig {
