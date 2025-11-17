@@ -209,24 +209,34 @@ model Session {
   // v2: Runtime Overrides (JSON)
   overrides   String? // JSON: { systemPrompt, firstMessage, language, voiceId, etc. }
 
-  agent Agent  @relation(fields: [agentId], references: [id])
-  turns Turn[]
+  // v5: A/B Testing
+  abTestId    String?
+  variantId   String?
+
+  agent       Agent                   @relation(fields: [agentId], references: [id])
+  turns       Turn[]
+  evaluation  ConversationEvaluation?
+  abTest      ABTest?                 @relation(fields: [abTestId], references: [id])
+  variant     ABTestVariant?          @relation(fields: [variantId], references: [id])
 
   @@map("sessions")
 }
 
 model Turn {
-  id            String   @id @default(cuid())
-  sessionId     String
-  userInput     String?
-  agentResponse String?
-  toolCalls     String? // JSON array
-  toolResults   String? // JSON array
-  startedAt     DateTime @default(now())
-  completedAt   DateTime?
-  latencyMs     Int?
-  audioLatencyMs Int?
-  llmLatencyMs  Int?
+  id               String   @id @default(cuid())
+  sessionId        String
+  userMessage      String?
+  assistantMessage String?
+  toolCalls        String? // JSON array
+  toolResults      String? // JSON array
+  startedAt        DateTime @default(now())
+  completedAt      DateTime?
+
+  // v4/v5: Enhanced Latency Tracking
+  sttLatencyMs     Int?
+  llmLatencyMs     Int?
+  ttsLatencyMs     Int?
+  totalLatencyMs   Int?
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
@@ -300,4 +310,123 @@ model Webhook {
   secret      Secret?  @relation(fields: [secretId], references: [id])
 
   @@map("webhooks")
+}
+
+// ============================================================================
+// v4/v5: Analytics & Evaluation
+// ============================================================================
+
+model ConversationEvaluation {
+  id                String   @id @default(cuid())
+  sessionId         String   @unique
+
+  // Overall evaluation
+  overallSuccess    Boolean?
+
+  // Criteria-based evaluation
+  successCriteria   String?  // JSON array of criteria strings
+  evaluationResults String?  // JSON: { "criterion1": true, "criterion2": false }
+
+  // Collected data during conversation
+  collectedData     String?  // JSON: { "email": "...", "phone": "..." }
+
+  // Metadata
+  evaluatedAt       DateTime @default(now())
+  evaluatedBy       String?  // "system", "human", or user ID
+  notes             String?
+
+  session           Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("conversation_evaluations")
+}
+
+model AgentMetrics {
+  id                String   @id @default(cuid())
+  agentId           String
+  date              DateTime // Date for daily aggregation
+
+  // Volume metrics
+  totalSessions     Int      @default(0)
+  completedSessions Int      @default(0)
+  failedSessions    Int      @default(0)
+
+  // Duration metrics
+  avgDurationMs     Int?
+  minDurationMs     Int?
+  maxDurationMs     Int?
+
+  // Latency metrics
+  avgTotalLatencyMs Int?
+  avgLLMLatencyMs   Int?
+  avgTTSLatencyMs   Int?
+  avgSTTLatencyMs   Int?
+
+  // Success metrics
+  successRate       Float?   // 0.0 to 100.0
+  evaluatedCount    Int      @default(0)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([agentId, date])
+  @@map("agent_metrics")
+}
+
+// ============================================================================
+// v5: A/B Testing Framework
+// ============================================================================
+
+model ABTest {
+  id          String   @id @default(cuid())
+  agentId     String
+  name        String
+  description String?
+  status      String   @default("draft") // draft, running, paused, completed
+
+  // Traffic allocation
+  trafficAllocation Float  @default(100.0) // Percentage of traffic to include in test
+
+  // Test configuration
+  startDate       DateTime?
+  endDate         DateTime?
+  minSampleSize   Int      @default(100) // Minimum sessions per variant
+
+  // Success metric configuration
+  successMetric   String   @default("evaluation") // evaluation, duration, completion_rate
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  variants        ABTestVariant[]
+  sessions        Session[]
+
+  @@map("ab_tests")
+}
+
+model ABTestVariant {
+  id            String   @id @default(cuid())
+  abTestId      String
+  name          String
+  description   String?
+  isControl     Boolean  @default(false)
+
+  // Traffic split (must sum to 100 across all variants in a test)
+  trafficWeight Int      @default(50) // 0-100
+
+  // Configuration overrides (JSON)
+  config        String?  // JSON: { systemPrompt, voiceId, llmModel, temperature, etc. }
+
+  // Performance metrics (computed)
+  totalSessions Int      @default(0)
+  successCount  Int      @default(0)
+  successRate   Float?
+  avgLatencyMs  Int?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  abTest        ABTest   @relation(fields: [abTestId], references: [id], onDelete: Cascade)
+  sessions      Session[]
+
+  @@map("ab_test_variants")
 }

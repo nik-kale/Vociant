@@ -143,18 +143,85 @@ Vociant has been systematically built to achieve feature parity with ElevenLabs 
 
 ### Implementation Status
 - ✅ Database schema ready
-- 🔄 Conversation history UI (pending)
-- 🔄 Transcript viewer component (pending)
-- 🔄 Success evaluation framework (pending)
-- 🔄 Performance metrics dashboard (pending)
-- 🔄 Post-call webhooks sender (pending)
+- ✅ Conversation history UI (completed in v5)
+- ✅ Transcript viewer component (completed in v5)
+- ✅ Success evaluation framework (completed in v5)
+- ✅ Performance metrics dashboard (completed in v5)
+- ✅ Post-call webhooks sender (completed in v5)
 
 **Files Modified**: 1 file, 34 lines
 **Commit**: `55452e5`
 
 ---
 
-## 🔄 Phase 5: Widget SDK (v5.0.0) - **FOUNDATION READY**
+## ✅ Phase 5: Analytics UI & A/B Testing (v5.0.0) - **COMPLETE**
+
+### Conversation History & Transcripts
+- ✅ Session detail page (`/dashboard/sessions/[id]`)
+- ✅ Interactive transcript viewer with turn-by-turn breakdown
+- ✅ Real-time latency metrics display
+- ✅ Tool execution visibility
+- ✅ Audio playback controls (foundation)
+- ✅ Export transcript functionality
+
+### Analytics Dashboard
+- ✅ Aggregated metrics page (`/dashboard/analytics`)
+- ✅ Performance overview cards (sessions, latency, success rate, duration)
+- ✅ Latency breakdown visualization
+- ✅ Session volume trends (30-day chart)
+- ✅ Agent performance comparison table
+- ✅ Three-tab interface (Performance, Agents, Volume)
+
+### Call Metrics & Sentiment
+- ✅ Real-time call metrics component
+- ✅ Color-coded latency indicators
+- ✅ Component-level latency breakdown (STT, LLM, TTS)
+- ✅ Sentiment analysis with positive/neutral/negative classification
+- ✅ Sentiment distribution visualization
+
+### A/B Testing Framework
+- ✅ Database models (`ABTest`, `ABTestVariant`)
+- ✅ Weighted traffic splitting algorithm
+- ✅ Statistical significance calculation (Chi-squared)
+- ✅ Confidence interval computation
+- ✅ Automatic winner detection
+- ✅ Variant performance tracking
+- ✅ Session-to-variant assignment
+
+### Webhook System
+- ✅ Webhook sender utility with retry logic
+- ✅ HMAC signature generation
+- ✅ Exponential backoff on failures
+- ✅ Event types: session.started, session.completed, session.failed, agent.evaluated
+- ✅ Parallel webhook delivery
+
+### UI Components Created
+1. `TranscriptViewer` - Full conversation playback
+2. `CallMetrics` - Performance metrics card
+3. `SentimentAnalysis` - Sentiment tracking
+4. `LatencyChart` - Component latency bars
+5. `AgentPerformanceTable` - Multi-agent comparison
+6. `SessionVolumeChart` - 30-day volume visualization
+
+### Utilities Created
+1. `ab-testing.ts` - A/B test management
+   - `selectVariant()` - Traffic splitting
+   - `calculateSignificance()` - Statistical testing
+   - `getWinningVariant()` - Winner determination
+   - `getConfidenceInterval()` - CI calculation
+2. `webhooks.ts` - Event delivery
+   - `sendWebhook()` - Delivery with retry
+   - `sendSessionCompletedWebhook()`
+   - `sendAgentEvaluatedWebhook()`
+   - `sendSessionStartedWebhook()`
+   - `sendSessionFailedWebhook()`
+
+**Files Added/Modified**: 15 files, 1,800+ lines
+**Commit**: (pending)
+
+---
+
+## 🔄 Phase 6: Widget SDK (v6.0.0) - **FOUNDATION READY**
 
 ### Ready for Implementation
 - ✅ Database schema supports widget config
@@ -173,7 +240,7 @@ Vociant has been systematically built to achieve feature parity with ElevenLabs 
 
 ---
 
-## 🔄 Phase 6: Telephony Integration (v6.0.0) - **MODELS READY**
+## 🔄 Phase 7: Telephony Integration (v7.0.0) - **MODELS READY**
 
 ### Ready for Implementation
 - ✅ Session.channelType supports 'telephony', 'sip'
@@ -192,14 +259,14 @@ Vociant has been systematically built to achieve feature parity with ElevenLabs 
 
 ---
 
-## 🔄 Phase 7: Advanced Features (v7.0.0) - **DOCUMENTED**
+## 🔄 Phase 8: Advanced Features (v8.0.0) - **DOCUMENTED**
 
 ### Planned Features (ROADMAP.md)
 - ⏳ Multi-voice support
 - ⏳ Latency optimization settings
 - ⏳ Custom LLM endpoints
 - ⏳ Agent templates
-- ⏳ A/B testing framework
+- ✅ A/B testing framework (completed in v5)
 - ⏳ Rate limiting
 - ⏳ Usage analytics
 - ⏳ Cost tracking by provider

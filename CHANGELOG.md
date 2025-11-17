@@ -2,6 +2,84 @@
 
 All notable changes to Vociant will be documented in this file.
 
+## [v5.0.0] - 2024-11-17
+
+### Added - Analytics UI & A/B Testing
+
+#### Conversation History & Transcript Viewer
+- Session detail page with full conversation transcript
+- Real-time latency metrics display (STT, LLM, TTS)
+- Interactive transcript viewer with turn-by-turn breakdown
+- Tool execution visibility in transcript
+- Audio playback controls (foundation)
+- Export transcript functionality
+
+#### Analytics Dashboard
+- Aggregated performance metrics across all agents
+- Latency breakdown by component (STT, LLM, TTS)
+- Session volume trends (30-day chart)
+- Agent performance comparison table
+- Success rate tracking
+- Call scoring and sentiment analysis
+
+#### Call Metrics & Performance
+- `CallMetrics` component for latency visualization
+- Color-coded latency indicators (excellent/good/needs improvement)
+- Latency distribution charts
+- Component-level performance tracking
+
+#### Sentiment Analysis
+- Real-time sentiment detection in user messages
+- Positive/neutral/negative classification
+- Sentiment distribution visualization
+- Overall conversation sentiment scoring
+
+#### A/B Testing Framework
+- New `ABTest` model for experiment management
+- `ABTestVariant` model for variant configurations
+- Weighted random traffic splitting
+- Statistical significance calculation (Chi-squared test)
+- Confidence interval computation
+- Variant performance tracking
+- Automatic winner detection
+
+#### Webhook Event System
+- `sendWebhook()` utility with retry logic
+- Exponential backoff for failed deliveries
+- HMAC signature verification
+- Event-specific webhooks:
+  - `session.started`
+  - `session.completed`
+  - `session.failed`
+  - `agent.evaluated`
+
+#### Database Enhancements
+- Enhanced `Turn` model with detailed latency tracking:
+  - `sttLatencyMs`, `llmLatencyMs`, `ttsLatencyMs`, `totalLatencyMs`
+  - Renamed fields: `userInput` → `userMessage`, `agentResponse` → `assistantMessage`
+- `ConversationEvaluation` model for session quality assessment
+- `AgentMetrics` model for daily aggregated performance data
+- A/B test support in `Session` model (`abTestId`, `variantId`)
+
+### Components Created
+- `TranscriptViewer` - Interactive conversation playback
+- `CallMetrics` - Performance metrics card
+- `SentimentAnalysis` - Sentiment tracking card
+- `LatencyChart` - Component latency visualization
+- `AgentPerformanceTable` - Multi-agent comparison
+- `SessionVolumeChart` - Volume trends over time
+
+### API Routes
+- `GET /dashboard/sessions/[id]` - Session detail page
+- `GET /dashboard/analytics` - Analytics dashboard
+
+### Documentation
+- Updated implementation status tracking
+- A/B testing utility documentation
+- Webhook sender documentation
+
+---
+
 ## [v3.0.0] - 2024-11-17
 
 ### Added - Authentication & Security
