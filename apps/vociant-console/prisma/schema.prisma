@@ -89,6 +89,11 @@ model Agent {
   webWidgetEnabled Boolean @default(true)
   allowedOrigins   String? // JSON array
 
+  // v3: Authentication & Security
+  requireSignedUrls Boolean @default(false) // Require signed URLs for client access
+  signedUrlSecret   String? // Secret for signing URLs (auto-generated)
+  domainAllowlist   String? // JSON array: ["https://example.com", "*.mydomain.com"]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -160,13 +165,17 @@ model Tool {
   category    String // system, server, client
   schema      String // JSON: OpenAI function schema
   endpoint    String? // For server tools
-  authType    String  @default("none") // none, api-key, bearer, oauth
-  authConfig  String? // JSON: credentials
+
+  // v3: Enhanced Authentication
+  authType    String  @default("none") // none, api-key, bearer, oauth2-client-credentials, oauth2-jwt-bearer, basic
+  authConfig  String? // JSON: non-secret config (token_url, etc.)
+  secretId    String? // FK to Secret (for sensitive credentials)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   project    Project?    @relation(fields: [projectId], references: [id])
+  secret     Secret?     @relation(fields: [secretId], references: [id])
   agentTools AgentTool[]
 
   @@map("tools")
@@ -241,4 +250,54 @@ model ProviderCredential {
 
   @@unique([projectId, provider, label])
   @@map("provider_credentials")
+}
+
+// ============================================================================
+// v3: Secrets Management
+// ============================================================================
+
+model Secret {
+  id          String   @id @default(cuid())
+  projectId   String?  // null = global
+  name        String   // User-friendly name
+  description String?
+  type        String   @default("generic") // generic, oauth2, api-key, jwt
+
+  // Encrypted value (format: iv.authTag.ciphertext)
+  encryptedValue String
+
+  // Metadata (non-sensitive config like token URLs, algorithm, etc.)
+  metadata    String? // JSON
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastUsedAt  DateTime?
+
+  tools       Tool[]
+  webhooks    Webhook[]
+
+  @@map("secrets")
+}
+
+// ============================================================================
+// v3: Webhooks
+// ============================================================================
+
+model Webhook {
+  id          String   @id @default(cuid())
+  projectId   String?
+  name        String
+  url         String
+  events      String   // JSON array: ["session.completed", "agent.evaluated"]
+
+  // HMAC authentication
+  secretId    String?  // FK to Secret (shared secret for HMAC)
+
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  secret      Secret?  @relation(fields: [secretId], references: [id])
+
+  @@map("webhooks")
 }
