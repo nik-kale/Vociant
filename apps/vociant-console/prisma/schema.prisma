@@ -1,0 +1,229 @@
+// Vociant Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Projects & Organization
+// ============================================================================
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agents          Agent[]
+  knowledgeSources KnowledgeSource[]
+  tools           Tool[]
+
+  @@map("projects")
+}
+
+// ============================================================================
+// Agents
+// ============================================================================
+
+model Agent {
+  id          String  @id @default(cuid())
+  projectId   String?
+  name        String
+  slug        String  @unique
+  description String?
+  status      String  @default("draft") // draft, active, archived
+
+  // Personality & Behavior
+  systemPrompt       String  @default("")
+  style              String? // supportive, concise, detailed, professional, friendly
+  maxTurnsPerSession Int?
+
+  // Voice & Audio
+  voiceProfileId String?
+  ttsProvider    String  @default("mock") // elevenlabs, google, deepgram, openai, mock
+  ttsModel       String?
+  sttProvider    String  @default("mock") // elevenlabs, deepgram, google, openai-whisper, mock
+  sttModel       String?
+
+  // Voice settings (JSON)
+  voiceSettings String? // JSON: { stability, similarityBoost, speed, pitch, energy }
+
+  // LLM Configuration
+  llmProvider String @default("openai") // openai, anthropic, google, mock
+  llmModel    String @default("gpt-4-turbo-preview")
+  llmConfig   String? // JSON: { temperature, maxTokens, topP, etc. }
+
+  // Conversation Flow
+  silenceTimeoutMs       Int     @default(5000)
+  interruptionsEnabled   Boolean @default(true)
+  turnEagerness          String  @default("medium") // low, medium, high
+  maxResponseLengthSec   Int?
+  latencyTargetMs        Int?
+
+  // Knowledge & RAG
+  ragEnabled  Boolean @default(false)
+  ragConfig   String? // JSON: { topK, chunkSize, embeddingProvider, etc. }
+
+  // Tools
+  toolExecutionPolicy String @default("auto") // strict, auto, ask-before-call
+
+  // Channels
+  webWidgetEnabled Boolean @default(true)
+  allowedOrigins   String? // JSON array
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project? @relation(fields: [projectId], references: [id])
+
+  sessions            Session[]
+  agentKnowledgeBases AgentKnowledgeBase[]
+  agentTools          AgentTool[]
+
+  @@map("agents")
+}
+
+// ============================================================================
+// Knowledge Base
+// ============================================================================
+
+model KnowledgeSource {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String
+  description String?
+  type        String // url, file, text, s3, github
+  status      String   @default("pending") // pending, indexing, ready, failed
+  config      String // JSON config based on type
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  agentKnowledgeBases AgentKnowledgeBase[]
+  chunks              KnowledgeChunk[]
+
+  @@map("knowledge_sources")
+}
+
+model AgentKnowledgeBase {
+  id                String @id @default(cuid())
+  agentId           String
+  knowledgeSourceId String
+
+  agent           Agent           @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  knowledgeSource KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, knowledgeSourceId])
+  @@map("agent_knowledge_bases")
+}
+
+model KnowledgeChunk {
+  id                String  @id @default(cuid())
+  knowledgeSourceId String
+  content           String
+  embedding         String? // JSON array of floats
+  metadata          String? // JSON metadata
+
+  knowledgeSource KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@map("knowledge_chunks")
+}
+
+// ============================================================================
+// Tools
+// ============================================================================
+
+model Tool {
+  id          String  @id @default(cuid())
+  projectId   String?
+  name        String
+  description String
+  category    String // system, server, client
+  schema      String // JSON: OpenAI function schema
+  endpoint    String? // For server tools
+  authType    String  @default("none") // none, api-key, bearer, oauth
+  authConfig  String? // JSON: credentials
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project    Project?    @relation(fields: [projectId], references: [id])
+  agentTools AgentTool[]
+
+  @@map("tools")
+}
+
+model AgentTool {
+  id      String @id @default(cuid())
+  agentId String
+  toolId  String
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  tool  Tool  @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, toolId])
+  @@map("agent_tools")
+}
+
+// ============================================================================
+// Sessions & Transcripts
+// ============================================================================
+
+model Session {
+  id          String   @id @default(cuid())
+  agentId     String
+  channelType String   @default("web") // web, telephony, sip
+  status      String   @default("active") // active, completed, failed, timeout
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+  metadata    String? // JSON
+
+  agent Agent  @relation(fields: [agentId], references: [id])
+  turns Turn[]
+
+  @@map("sessions")
+}
+
+model Turn {
+  id            String   @id @default(cuid())
+  sessionId     String
+  userInput     String?
+  agentResponse String?
+  toolCalls     String? // JSON array
+  toolResults   String? // JSON array
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  latencyMs     Int?
+  audioLatencyMs Int?
+  llmLatencyMs  Int?
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("turns")
+}
+
+// ============================================================================
+// Provider Credentials (encrypted in production)
+// ============================================================================
+
+model ProviderCredential {
+  id         String   @id @default(cuid())
+  projectId  String? // null = global
+  provider   String // elevenlabs, openai, anthropic, etc.
+  label      String // User-friendly label
+  apiKey     String // TODO: Encrypt in production
+  config     String? // JSON: additional config
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([projectId, provider, label])
+  @@map("provider_credentials")
+}
