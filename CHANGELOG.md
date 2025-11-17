@@ -2,6 +2,40 @@
 
 All notable changes to Vociant will be documented in this file.
 
+## [v3.0.0] - 2024-11-17
+
+### Added - Authentication & Security
+
+#### Signed URL Authentication
+- Generate time-limited tokens for WebSocket access (15min expiry)
+- Server-side token validation before connection
+- `POST /api/auth/signed-url` endpoint
+- Database: `Agent.requireSignedUrls`, `Agent.signedUrlSecret`
+
+#### Domain Allowlist
+- Restrict signed URL requests to specific origins
+- Wildcard subdomain support (`*.example.com`)
+- Database: `Agent.domainAllowlist`
+
+#### Secrets Management
+- AES-256-GCM encryption for credentials
+- New `Secret` model with encrypted storage
+- `GET/POST /api/secrets` endpoints
+- Environment: `SECRET_ENCRYPTION_KEY`
+
+#### Enhanced Tool Authentication
+- OAuth 2.0 client credentials & JWT bearer flows
+- HTTP Basic Auth support
+- Tool.authType: `oauth2-client-credentials`, `oauth2-jwt-bearer`, `basic`
+- Tool.secretId FK to Secret
+
+#### HMAC Webhook Validation
+- SHA256 HMAC signatures for webhooks
+- New `Webhook` model
+- Secure webhook delivery
+
+---
+
 ## [v2.0.0] - 2024-11-17
 
 ### Added - Critical Agent Features
