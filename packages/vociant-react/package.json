@@ -1,0 +1,42 @@
+{
+  "name": "@vociant/react",
+  "version": "1.0.0",
+  "description": "React hooks and components for Vociant voice agents",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --external react",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --external react --watch"
+  },
+  "keywords": [
+    "vociant",
+    "voice",
+    "ai",
+    "agent",
+    "react",
+    "hooks",
+    "conversational-ai"
+  ],
+  "author": "Vociant",
+  "license": "MIT",
+  "dependencies": {
+    "@vociant/sdk-js": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.45",
+    "react": "^18.2.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vociant/vociant"
+  }
+}

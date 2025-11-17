@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
+import WidgetCustomizer from '@/components/widget/widget-customizer';
 
 export default async function AgentBuilderPage({
   params,
@@ -325,30 +326,11 @@ export default async function AgentBuilderPage({
           </TabsContent>
 
           {/* Channels Tab */}
-          <TabsContent value="channels" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Web Widget</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    defaultChecked={agent.webWidgetEnabled}
-                    className="rounded"
-                  />
-                  <span className="text-sm font-medium">Enable Web Widget</span>
-                </label>
-                {agent.webWidgetEnabled && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium mb-2">Embed Code:</p>
-                    <code className="text-xs block bg-white p-3 rounded border">
-                      {`<script src="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/widget.js"></script>\n<div id="vociant-widget" data-agent="${agent.slug}"></div>`}
-                    </code>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          <TabsContent value="channels">
+            <WidgetCustomizer
+              agentSlug={agent.slug}
+              baseUrl={process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}
+            />
           </TabsContent>
         </Tabs>
       </div>

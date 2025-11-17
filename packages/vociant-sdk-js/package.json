@@ -1,0 +1,35 @@
+{
+  "name": "@vociant/sdk-js",
+  "version": "1.0.0",
+  "description": "Vanilla JavaScript SDK for Vociant voice agents",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch"
+  },
+  "keywords": [
+    "vociant",
+    "voice",
+    "ai",
+    "agent",
+    "conversational-ai",
+    "voice-ai"
+  ],
+  "author": "Vociant",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vociant/vociant"
+  }
+}

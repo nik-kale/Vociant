@@ -2,6 +2,82 @@
 
 All notable changes to Vociant will be documented in this file.
 
+## [v6.0.0] - 2024-11-17
+
+### Added - Widget SDK & Client Libraries
+
+#### JavaScript SDK (`@vociant/sdk-js`)
+- `VociantClient` class for programmatic voice agent control
+- `VociantWidget` class for pre-built UI component
+- WebSocket-based real-time audio streaming
+- Full event system (connected, message, speaking, listening, error)
+- Audio configuration (echo cancellation, noise suppression)
+- Conversation history management
+- TypeScript support with full type definitions
+- UMD/ESM/CJS builds for universal compatibility
+
+#### React SDK (`@vociant/react`)
+- `useVociant` hook for voice agent integration
+- `useVociantWidget` hook for widget lifecycle management
+- `VociantWidget` component for declarative usage
+- `VociantProvider` context provider for shared configuration
+- Full TypeScript support
+- Next.js SSR compatibility with dynamic imports
+- React 16.8+ hooks API
+
+#### Widget Features
+- Customizable positioning (4 corners)
+- Full theme customization:
+  - Primary color
+  - Text color
+  - Background color
+  - Border radius
+  - Custom fonts
+- Custom greeting messages
+- Avatar image support
+- Auto-start option
+- Real-time transcript display
+- Microphone controls
+- Connection state management
+
+#### Widget Customization UI
+- Visual widget customizer in agent builder
+- Live preview of widget appearance
+- Three-tab configuration interface:
+  - Appearance (colors, position, styling)
+  - Content (greeting, avatar)
+  - Behavior (auto-start)
+- Code generator for vanilla JS and React
+- Copy-to-clipboard functionality
+- Installation instructions
+
+#### Embed Code Generator
+- Vanilla JavaScript embed code
+- React component code
+- NPM installation commands
+- Customized configuration based on UI settings
+- Syntax-highlighted code blocks
+- Multiple integration examples
+
+### Documentation
+- Comprehensive README for `@vociant/sdk-js`
+- Comprehensive README for `@vociant/react`
+- Usage examples for both libraries
+- TypeScript type documentation
+- Browser compatibility information
+- Security best practices
+
+### Enhanced
+- Agent builder Channels tab completely redesigned
+- Removed basic embed code in favor of full customizer
+- Added widget configuration persistence (ready for database storage)
+
+**Files Added**: 13 files, 1,500+ lines
+**Packages**: 2 new NPM packages (@vociant/sdk-js, @vociant/react)
+**Commit**: (pending)
+
+---
+
 ## [v5.0.0] - 2024-11-17
 
 ### Added - Analytics UI & A/B Testing
