@@ -430,3 +430,133 @@ model ABTestVariant {
 
   @@map("ab_test_variants")
 }
+
+// ============================================================================
+// v7: Flow Builder - Visual Conversation Designer
+// ============================================================================
+
+model ConversationFlow {
+  id          String   @id @default(cuid())
+  agentId     String?
+  name        String
+  description String?
+  version     Int      @default(1)
+  status      String   @default("draft") // draft, active, archived
+
+  // Flow metadata
+  startNodeId String?  // Entry point node
+  variables   String?  // JSON: flow-level variables with types
+
+  // Flow settings
+  settings    String?  // JSON: timeout, error handling, etc.
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+
+  nodes       FlowNode[]
+  edges       FlowEdge[]
+
+  @@map("conversation_flows")
+}
+
+model FlowNode {
+  id          String   @id @default(cuid())
+  flowId      String
+  type        String   // message, condition, tool, variable, webhook, goto, end
+
+  // Visual position
+  positionX   Float
+  positionY   Float
+
+  // Node configuration (JSON based on type)
+  config      String   // Type-specific configuration
+
+  // Metadata
+  label       String?
+  description String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  flow        ConversationFlow @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  outgoingEdges FlowEdge[]     @relation("SourceNode")
+  incomingEdges FlowEdge[]     @relation("TargetNode")
+
+  @@map("flow_nodes")
+}
+
+model FlowEdge {
+  id          String   @id @default(cuid())
+  flowId      String
+  sourceId    String   // Source node ID
+  targetId    String   // Target node ID
+
+  // Edge type
+  type        String   @default("default") // default, conditional, fallback
+
+  // Condition (for conditional edges)
+  condition   String?  // JSON: condition expression
+
+  // Visual styling
+  label       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  flow        ConversationFlow @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  sourceNode  FlowNode         @relation("SourceNode", fields: [sourceId], references: [id], onDelete: Cascade)
+  targetNode  FlowNode         @relation("TargetNode", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@map("flow_edges")
+}
+
+// ============================================================================
+// v8: Advanced Voice Features
+// ============================================================================
+
+model ConversationGuardrail {
+  id          String   @id @default(cuid())
+  agentId     String
+  name        String
+  type        String   // content_filter, topic_boundary, pii_detection, toxicity
+
+  // Guardrail configuration
+  config      String   // JSON: rules, thresholds, actions
+
+  // Actions on violation
+  action      String   @default("warn") // warn, block, redirect, escalate
+
+  isEnabled   Boolean  @default(true)
+  priority    Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("conversation_guardrails")
+}
+
+model VoiceProfile {
+  id          String   @id @default(cuid())
+  projectId   String?
+  name        String
+  provider    String   // elevenlabs, openai, google, etc.
+  voiceId     String   // Provider-specific voice ID
+
+  // Voice characteristics
+  gender      String?  // male, female, neutral
+  age         String?  // young, middle, senior
+  accent      String?  // american, british, etc.
+
+  // Voice settings
+  settings    String?  // JSON: stability, similarity, speed, pitch
+
+  // Custom voice cloning
+  isCustom    Boolean  @default(false)
+  sampleAudioUrl String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("voice_profiles")
+}

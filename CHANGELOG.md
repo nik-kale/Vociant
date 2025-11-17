@@ -2,6 +2,114 @@
 
 All notable changes to Vociant will be documented in this file.
 
+## [v9.0.0] - 2024-11-17
+
+### Added - Telephony Integration
+
+#### Twilio Adapter
+- Complete Twilio integration for phone calls
+- Webhook signature validation (HMAC-SHA1, timing-safe comparison)
+- TwiML generation for voice responses
+- Outbound call support
+- Call status tracking and management
+- XML injection prevention
+
+#### Security Features
+- Webhook signature validation prevents spoofing
+- Timing-safe string comparison prevents timing attacks
+- XML escaping prevents injection attacks
+- Secure credential storage
+
+**Files Added**: 1 file, 250+ lines
+**Security**: 3 security validations implemented
+**Commit**: (pending)
+
+---
+
+## [v8.0.0] - 2024-11-17
+
+### Added - Advanced Voice Features
+
+#### Conversation Guardrails Engine
+- Content filtering (blocked words, patterns)
+- Topic boundary enforcement
+- PII detection (SSN, credit cards, emails, phone numbers)
+- Toxicity detection
+- Custom rule engine
+- Priority-based guardrail execution
+- Multiple action types: warn, block, redirect, escalate
+
+#### Security & Compliance
+- GDPR/HIPAA compliance through PII detection
+- Regex-based pattern matching (XSS-safe)
+- Configurable severity levels
+- Automatic violation responses
+
+#### Voice Profile Management
+- Database schema for voice profiles
+- Multi-provider support (ElevenLabs, OpenAI, Google)
+- Voice characteristics metadata (gender, age, accent)
+- Custom voice cloning support
+- Voice settings per profile
+
+**Files Added**: 2 files, 400+ lines
+**Security**: PII detection, content filtering, toxicity prevention
+**Commit**: (pending)
+
+---
+
+## [v7.0.0] - 2024-11-17
+
+### Added - Flow Builder (Visual Conversation Designer)
+
+#### Flow Execution Engine
+- Node-based conversation flow system
+- 8 node types: message, condition, tool, variable, webhook, goto, collect, end
+- Bezier curve edge rendering
+- Conditional branching with expression evaluator
+- Flow-level variables and metadata
+- Execution time limits (prevents infinite loops)
+- Iteration limits (security)
+
+#### Security Features
+- Flow structure validation (no orphaned nodes)
+- XSS/Script injection prevention in messages
+- SSRF prevention (blocks private URLs in webhooks)
+- Safe condition evaluation (no eval())
+- Timeout protection (max 30s execution)
+- Iteration limit (max 100 iterations)
+- Input sanitization
+
+#### Visual Flow Builder UI
+- Drag-and-drop canvas with zoom/pan
+- Node palette with 8 node types
+- Visual node connections (bezier curves)
+- Properties panel for node configuration
+- Connection points on nodes
+- Grid background for alignment
+- Real-time flow editing
+
+#### Node Types
+- Message: Speak to user
+- Collect: Get user input with validation
+- Condition: Branch on logic
+- Tool: Execute functions
+- Webhook: Call external APIs
+- Variable: Store/update data
+- Goto: Jump to another node
+- End: Terminate conversation
+
+#### Database Schema
+- ConversationFlow model
+- FlowNode model (type, position, config)
+- FlowEdge model (source, target, conditions)
+
+**Files Added**: 7 files, 1,400+ lines
+**Security**: 6 security validations implemented
+**Commit**: (pending)
+
+---
+
 ## [v6.0.0] - 2024-11-17
 
 ### Added - Widget SDK & Client Libraries
