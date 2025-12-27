@@ -29,10 +29,10 @@ export async function POST(request: NextRequest) {
       projectId,
     });
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       id: credential.id,
-      message: 'Credential saved and encrypted' 
+      message: 'Credential saved and encrypted'
     });
 
   } catch (error) {

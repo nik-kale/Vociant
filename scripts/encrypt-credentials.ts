@@ -24,7 +24,7 @@ async function main() {
     }
 
     console.log(`Encrypting credential: ${cred.label}`);
-    
+
     // Encrypt
     const encrypted = encryptSecret(cred.apiKey, ENCRYPTION_KEY);
 

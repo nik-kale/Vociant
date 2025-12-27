@@ -16,14 +16,14 @@ export class CredentialService {
     config?: any;
   }) {
     const encryptedKey = encryptCredential(data.apiKey);
-    
+
     return db.providerCredential.upsert({
       where: {
         projectId_provider_label: {
           projectId: data.projectId || '', // Handle null constraint if necessary, but schema allows null. Prisma uses null in unique constraint differently depending on DB. Assuming standard behavior.
           // Wait, Prisma unique constraint with nullable field can be tricky.
           // Let's assume unique constraint works as defined in schema.
-          // Actually, if projectId is null, we can't use it in composite unique in some DBs easily without specific handling, 
+          // Actually, if projectId is null, we can't use it in composite unique in some DBs easily without specific handling,
           // but let's stick to the schema definition.
           projectId: data.projectId ?? null, // actually schema says String?, so standard null.
           provider: data.provider,

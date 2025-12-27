@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { getToken } from 'next-auth/jwt';
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -42,6 +43,29 @@ export async function middleware(request: NextRequest) {
     response.headers.set('X-RateLimit-Limit', limit.toString());
     response.headers.set('X-RateLimit-Remaining', remaining.toString());
     response.headers.set('X-RateLimit-Reset', reset.toString());
+
+    // Authentication Check for API routes (exclude auth routes)
+    if (!request.nextUrl.pathname.startsWith('/api/auth') && 
+        !request.nextUrl.pathname.startsWith('/api/public')) { // Allow public routes if any
+      const token = await getToken({ req: request });
+      if (!token) {
+        // Return 401
+        return NextResponse.json(
+          { error: 'Unauthorized' }, 
+          { 
+            status: 401,
+            // Include security headers
+            headers: {
+              'X-Frame-Options': 'DENY',
+              'X-Content-Type-Options': 'nosniff',
+              'X-XSS-Protection': '1; mode=block',
+              'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+              'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self' data:; connect-src 'self' *; frame-ancestors 'none';",
+            } 
+          }
+        );
+      }
+    }
   }
 
   return response;
