@@ -1,10 +1,15 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAgentSchema } from '@/lib/schemas/agent';
+import { createRequestLogger } from '@/lib/logger';
 
 // GET /api/agents - List all agents
 export async function GET(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+  const logger = createRequestLogger(requestId, { path: '/api/agents', method: 'GET' });
+
   try {
+    logger.info('Fetching agents');
     const agents = await db.agent.findMany({
       orderBy: { updatedAt: 'desc' },
       include: {
@@ -17,10 +22,11 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-
+    
+    logger.info({ count: agents.length }, 'Agents fetched successfully');
     return NextResponse.json({ agents });
   } catch (error) {
-    console.error('Failed to fetch agents:', error);
+    logger.error({ error }, 'Failed to fetch agents');
     return NextResponse.json(
       { error: 'Failed to fetch agents' },
       { status: 500 }
@@ -30,6 +36,9 @@ export async function GET(request: NextRequest) {
 
 // POST /api/agents - Create a new agent
 export async function POST(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+  const logger = createRequestLogger(requestId, { path: '/api/agents', method: 'POST' });
+
   try {
     const body = await request.json();
     
@@ -37,6 +46,7 @@ export async function POST(request: NextRequest) {
     const result = createAgentSchema.safeParse(body);
     
     if (!result.success) {
+      logger.warn({ error: result.error.flatten() }, 'Validation failed');
       return NextResponse.json(
         { error: 'Validation failed', details: result.error.flatten() }, 
         { status: 400 }
@@ -61,6 +71,7 @@ export async function POST(request: NextRequest) {
         slug = `${slug}-${Math.floor(Math.random() * 1000)}`;
     }
 
+    logger.info({ name: data.name, slug }, 'Creating agent');
     const agent = await db.agent.create({
       data: {
         name: data.name,
@@ -76,10 +87,12 @@ export async function POST(request: NextRequest) {
         turnTimeoutSeconds: data.turnTimeoutSeconds,
       },
     });
+    
+    logger.info({ agentId: agent.id }, 'Agent created successfully');
 
     return NextResponse.json({ agent }, { status: 201 });
   } catch (error) {
-    console.error('Failed to create agent:', error);
+    logger.error({ error }, 'Failed to create agent');
     return NextResponse.json(
       { error: 'Failed to create agent' },
       { status: 500 }
