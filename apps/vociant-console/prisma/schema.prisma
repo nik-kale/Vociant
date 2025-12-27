@@ -252,7 +252,7 @@ model ProviderCredential {
   projectId  String? // null = global
   provider   String // elevenlabs, openai, anthropic, etc.
   label      String // User-friendly label
-  apiKey     String // TODO: Encrypt in production
+  apiKey     String // Encrypted: iv.authTag.ciphertext
   config     String? // JSON: additional config
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
