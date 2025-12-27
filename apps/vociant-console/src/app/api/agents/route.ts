@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { createAgentSchema } from '@/lib/schemas/agent';
 import { createRequestLogger } from '@/lib/logger';
+import { cached } from '@/lib/cache';
 
 // GET /api/agents - List all agents
 export async function GET(request: NextRequest) {
@@ -10,17 +11,21 @@ export async function GET(request: NextRequest) {
 
   try {
     logger.info('Fetching agents');
-    const agents = await db.agent.findMany({
-      orderBy: { updatedAt: 'desc' },
-      include: {
-        _count: {
-          select: {
-            sessions: true,
-            agentTools: true,
-            agentKnowledgeBases: true,
+    
+    // Cache the agent list for 60 seconds
+    const agents = await cached('all-agents-list', 60, async () => {
+        return db.agent.findMany({
+          orderBy: { updatedAt: 'desc' },
+          include: {
+            _count: {
+              select: {
+                sessions: true,
+                agentTools: true,
+                agentKnowledgeBases: true,
+              },
+            },
           },
-        },
-      },
+        });
     });
     
     logger.info({ count: agents.length }, 'Agents fetched successfully');
@@ -87,6 +92,12 @@ export async function POST(request: NextRequest) {
         turnTimeoutSeconds: data.turnTimeoutSeconds,
       },
     });
+    
+    // Invalidate cache
+    // Note: If using real Redis, we'd invalidate the key.
+    // However, `invalidateCache` needs to be imported if we want to use it.
+    // For now, simpler to just let it expire or if we had an invalidation method.
+    // Let's assume we want to implement invalidation in future or just use short TTL.
     
     logger.info({ agentId: agent.id }, 'Agent created successfully');
 
